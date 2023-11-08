@@ -160,7 +160,7 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                     }
                 }
             }
-        }, 1, 1, TimeUnit.SECONDS);
+        }, 1, config.refreshInterval, TimeUnit.SECONDS);
     }
 
     private void sendACCommand(byte command, byte temperature)

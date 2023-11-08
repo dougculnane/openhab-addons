@@ -24,6 +24,7 @@ import java.util.concurrent.TimeoutException;
 import org.bn.coders.IASN1PreparedElement;
 import org.openhab.binding.saicismart.internal.asn1.Util;
 import org.openhab.core.library.types.DateTimeType;
+import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.MetricPrefix;
 import org.openhab.core.library.unit.Units;
@@ -95,8 +96,9 @@ class ChargeStateUpdater implements Callable<OTA_ChrgMangDataResp> {
 
             }
 
-            saiCiSMARTHandler.updateState(CHANNEL_SOC, new QuantityType<>(
-                    chargingStatusResponseMessage.getApplicationData().getBmsPackSOCDsp() / 10.d, Units.PERCENT));
+            saiCiSMARTHandler.updateState(CHANNEL_SOC,
+                    new DecimalType(chargingStatusResponseMessage.getApplicationData().getBmsPackSOCDsp() / 10.d));
+
             logger.debug("Got message: {}",
                     new GsonBuilder().setPrettyPrinting().create().toJson(chargingStatusResponseMessage));
 
