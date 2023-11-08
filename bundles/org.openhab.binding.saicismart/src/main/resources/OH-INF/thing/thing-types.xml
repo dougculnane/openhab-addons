@@ -116,7 +116,7 @@
 			<tag>Measurement</tag>
 			<tag>Energy</tag>
 		</tags>
-		<state pattern="%d %unit%" readOnly="true"/>
+		<state pattern="%.1f %%" readOnly="true"/>
 	</channel-type>
 	<channel-type id="power-channel">
 		<item-type>Number:Power</item-type>

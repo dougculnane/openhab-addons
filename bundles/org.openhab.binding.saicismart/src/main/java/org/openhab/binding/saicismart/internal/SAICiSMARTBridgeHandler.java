@@ -167,7 +167,8 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
                     logger.debug("Got message: {}",
                             new GsonBuilder().setPrettyPrinting().create().toJson(messageListResponseMessage));
 
-                    if (messageListResponseMessage.getApplicationData() != null) {
+                    if (messageListResponseMessage.getApplicationData() != null
+                            && messageListResponseMessage.getApplicationData().getMessages() != null) {
                         for (net.heberling.ismart.asn1.v1_1.entity.Message message : messageListResponseMessage
                                 .getApplicationData().getMessages()) {
                             if (message.isVinPresent()) {
@@ -179,7 +180,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
                             }
                         }
                     } else {
-                        logger.warn("No application data found!");
+                        logger.debug("No application data found!");
                     }
 
                     updateStatus(ThingStatus.ONLINE);
