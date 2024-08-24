@@ -13,35 +13,12 @@
   <artifactId>org.openhab.binding.saicismart</artifactId>
 
   <name>openHAB Add-ons :: Bundles :: SAICiSMART Binding</name>
-  <properties>
-    <bnd.importpackage>org.brotli.dec;resolution:=optional,org.conscrypt;resolution:=optional</bnd.importpackage>
-  </properties>
 
   <dependencies>
     <dependency>
       <groupId>io.github.saic-ismart-api</groupId>
-      <artifactId>saic-ismart-client</artifactId>
-      <version>0.3.0</version>
-    </dependency>
-    <dependency>
-      <groupId>io.github.saic-ismart-api</groupId>
       <artifactId>saic-ismart-api</artifactId>
-      <version>0.3.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents.client5</groupId>
-      <artifactId>httpclient5</artifactId>
-      <version>5.2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents.core5</groupId>
-      <artifactId>httpcore5</artifactId>
-      <version>5.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents.core5</groupId>
-      <artifactId>httpcore5-h2</artifactId>
-      <version>5.2</version>
+      <version>0.3.1</version>
     </dependency>
     <dependency>
       <groupId>net.heberling.binarynotes</groupId>

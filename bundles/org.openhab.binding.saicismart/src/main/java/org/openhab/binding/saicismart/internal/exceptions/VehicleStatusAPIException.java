@@ -13,8 +13,7 @@
 package org.openhab.binding.saicismart.internal.exceptions;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-
-import net.heberling.ismart.asn1.v2_1.MP_DispatcherBody;
+import org.openhab.binding.saicismart.internal.rest.v1.JsonResponseMessage;
 
 /**
  * @author Doug Culnane - Initial contribution
@@ -22,7 +21,7 @@ import net.heberling.ismart.asn1.v2_1.MP_DispatcherBody;
 @NonNullByDefault
 public class VehicleStatusAPIException extends Exception {
 
-    public VehicleStatusAPIException(MP_DispatcherBody body) {
-        super("[" + body.getResult() + "] " + new String(body.getErrorMessage()));
+    public VehicleStatusAPIException(JsonResponseMessage response) {
+        super("[" + response.getCode() + "] " + response.getMessage());
     }
 }

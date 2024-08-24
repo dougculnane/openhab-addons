@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.saicismart.internal;
 
-import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.ABRP_API_KEY;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.API_ENDPOINT_V21;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_FORCE_REFRESH;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_LAST_ACTIVITY;
@@ -47,14 +46,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.GsonBuilder;
 
-import net.heberling.ismart.abrp.ABRP;
 import net.heberling.ismart.asn1.v1_1.entity.Message;
 import net.heberling.ismart.asn1.v2_1.MessageCoder;
 import net.heberling.ismart.asn1.v2_1.entity.OTA_RVCReq;
 import net.heberling.ismart.asn1.v2_1.entity.OTA_RVCStatus25857;
-import net.heberling.ismart.asn1.v2_1.entity.OTA_RVMVehicleStatusResp25857;
 import net.heberling.ismart.asn1.v2_1.entity.RvcReqParam;
-import net.heberling.ismart.asn1.v3_0.entity.OTA_ChrgMangDataResp;
 
 /**
  * The {@link SAICiSMARTHandler} is responsible for handling commands, which are
@@ -149,17 +145,16 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                 .isAfter(Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS, ChronoUnit.MINUTES))) {
             if (this.getBridgeHandler().getUid() != null && this.getBridgeHandler().getToken() != null) {
                 try {
-                    OTA_RVMVehicleStatusResp25857 otaRvmVehicleStatusResp25857 = new VehicleStateUpdater(this).call();
-                    OTA_ChrgMangDataResp otaChrgMangDataResp = new ChargeStateUpdater(this).call();
+                    new VehicleStateUpdater(this).call();
 
                     if (config.abrpUserToken != null && config.abrpUserToken.length() > 0) {
-                        String execute = ABRP.updateAbrp(ABRP_API_KEY, config.abrpUserToken,
-                                otaRvmVehicleStatusResp25857, otaChrgMangDataResp);
+                        // String execute = ABRP.updateAbrp(ABRP_API_KEY, config.abrpUserToken,
+                        // otaRvmVehicleStatusResp25857, otaChrgMangDataResp);
 
-                        logger.debug("ABRP: {}", execute);
+                        // logger.debug("ABRP: {}", execute);
                     }
                 } catch (Exception e) {
-                    logger.warn("Could not refresh car data.", e);
+                    logger.warn("Could not refresh car data. {}", e.getMessage());
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                             "@text/addon.saicismart.error.refresh.car.data");
                 }

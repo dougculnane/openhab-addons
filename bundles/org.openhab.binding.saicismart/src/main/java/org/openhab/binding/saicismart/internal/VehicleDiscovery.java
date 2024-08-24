@@ -14,12 +14,12 @@ package org.openhab.binding.saicismart.internal;
 
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.THING_TYPE_VEHICLE;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.saicismart.internal.rest.v1.VehicleList.VinListItem;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
@@ -28,8 +28,6 @@ import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
-
-import net.heberling.ismart.asn1.v1_1.entity.VinInfo;
 
 /**
  *
@@ -47,8 +45,8 @@ public class VehicleDiscovery extends AbstractDiscoveryService implements Discov
 
     @Override
     protected void startScan() {
-        Collection<VinInfo> vinList = handler.getVinList();
-        for (VinInfo vinInfo : vinList) {
+        VinListItem[] vinList = handler.getVinList();
+        for (VinListItem vinInfo : vinList) {
             ThingTypeUID type = THING_TYPE_VEHICLE;
             ThingUID thingUID = new ThingUID(type, handler.getThing().getUID(), vinInfo.getVin());
             DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(thingUID)
