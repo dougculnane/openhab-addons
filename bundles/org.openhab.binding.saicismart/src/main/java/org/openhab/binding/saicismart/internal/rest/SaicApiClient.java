@@ -25,6 +25,8 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
 import org.openhab.binding.saicismart.internal.rest.v1.JsonResponseMessage;
+import org.openhab.binding.saicismart.internal.rest.v1.MessageList;
+import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList;
 import org.openhab.binding.saicismart.internal.rest.v1.OauthToken;
 import org.openhab.binding.saicismart.internal.rest.v1.VechicleChargingMgmtData;
 import org.openhab.binding.saicismart.internal.rest.v1.VehicleCcInfo;
@@ -103,15 +105,15 @@ public class SaicApiClient {
 
     public VehicleStatisticsBasicInfo getVehicleStatisticsBasicInfo(@Nullable String token, String vin)
             throws IOException, InterruptedException, TimeoutException, ExecutionException {
-        VehicleStatisticsBasicInfo message1 = sendRequest(new VehicleStatisticsBasicInfo(),
+        return sendRequest(new VehicleStatisticsBasicInfo(),
                 URL_ROOT_V1 + "vehicle/statisticsBasicInfo?vin=" + HashUtils.sha256(vin), HttpMethod.GET, "",
                 "application/json", token, "");
-        if (message1.isSuccess()) {
-            return sendRequest(new VehicleStatisticsBasicInfo(),
-                    URL_ROOT_V1 + "vehicle/statisticsBasicInfo?vin=" + HashUtils.sha256(vin), HttpMethod.GET, "",
-                    "application/json", token, message1.getEventId());
-        }
-        return message1;
+    }
+
+    public VehicleStatus getVehicleStatusClassified(String token, String vin)
+            throws IOException, InterruptedException, TimeoutException, ExecutionException {
+        return sendRequest(new VehicleStatus(), URL_ROOT_V1 + "vehicle/status/classified?vin=" + HashUtils.sha256(vin),
+                HttpMethod.GET, "", "application/json", token, "");
     }
 
     public VehicleCcInfo getVehicleCcInfo(@Nullable String token, String vin)
@@ -136,6 +138,30 @@ public class SaicApiClient {
                     HttpMethod.GET, "", "application/json", token, message1.getEventId());
         }
         return message1;
+    }
+
+    public MessageList getMessageList(String token, String vin)
+            throws IOException, InterruptedException, TimeoutException, ExecutionException {
+        return sendRequest(new MessageList(), URL_ROOT_V1 + "message/list?vin=" + HashUtils.sha256(vin), HttpMethod.GET,
+                "", "application/json", token, "");
+    }
+
+    public MessageList getVehicleInfo(String token, String vin)
+            throws IOException, InterruptedException, TimeoutException, ExecutionException {
+        return sendRequest(new MessageList(), URL_ROOT_V1 + "vehicle/info?vin=" + HashUtils.sha256(vin), HttpMethod.GET,
+                "", "application/json", token, "");
+    }
+
+    public JsonResponseMessage getVehicleGeoFence(String token, String vin)
+            throws IOException, InterruptedException, TimeoutException, ExecutionException {
+        return sendRequest(new VehicleStatus(), URL_ROOT_V1 + "vehicle/geoFence?vin=" + HashUtils.sha256(vin),
+                HttpMethod.GET, "", "application/json", token, "");
+    }
+
+    public MessageNotificationList getMessageNotificationList(String token)
+            throws IOException, InterruptedException, TimeoutException, ExecutionException {
+        return sendRequest(new MessageNotificationList(), URL_ROOT_V1 + "message/notificationList", HttpMethod.GET, "",
+                "application/json", token, "");
     }
 
     private <T extends JsonResponseMessage> T sendRequest(T responseMessage, String url, HttpMethod httpMethod,
@@ -172,8 +198,9 @@ public class SaicApiClient {
             request.header("event-id", eventId);
         }
         logger.info("Request: {}", request);
-        ContentResponse response = request.send();
+        System.out.println(request);
 
+        ContentResponse response = request.send();
         if (response.getHeaders().get("app-content-encrypted") != null
                 && response.getHeaders().get("app-content-encrypted").equals("1")) {
             String responseEncripted = response.getContentAsString();
@@ -181,7 +208,7 @@ public class SaicApiClient {
             String decryptedString = EncryptionUtils.decryptResponse(response.getHeaders().get("app-send-date"),
                     response.getHeaders().get("original-content-type"), responseEncripted);
             logger.info("Response: {}", decryptedString);
-
+            System.out.println(decryptedString);
             responseMessage = (T) gson.fromJson(decryptedString, responseMessage.getClass());
         } else {
             logger.warn("Unexpected Response: {}", response.getContentAsString());

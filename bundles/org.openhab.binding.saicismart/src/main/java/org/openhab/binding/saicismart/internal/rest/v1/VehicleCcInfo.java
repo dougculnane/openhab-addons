@@ -19,9 +19,13 @@ package org.openhab.binding.saicismart.internal.rest.v1;
  */
 public class VehicleCcInfo extends JsonResponseMessage {
 
-    @Override
-    Object getData() {
-        // TODO Auto-generated method stub
-        return null;
+    String data;
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
     }
 }

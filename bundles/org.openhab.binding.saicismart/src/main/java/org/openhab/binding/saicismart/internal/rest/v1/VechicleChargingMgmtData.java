@@ -56,15 +56,26 @@ public class VechicleChargingMgmtData extends JsonResponseMessage {
         Integer chargingDuration;
         Integer chargingType;
         Integer lastChargeEndingPower;
+        /**
+         * Value / 10 = Range
+         */
         Integer fuelRangeElec;
         Integer realtimePower;
         Integer workingCurrent;
+        /**
+         * Gun connected
+         * 0 = Disconnected
+         * 1 = Connected
+         */
         Integer chargingGunState;
         Integer mileageOfDay;
         Long startTime;
         Long endTime;
         Integer powerUsageOfDay;
         Integer powerUsageSinceLastCharge;
+        /**
+         * Odometer
+         */
         Integer mileage;
 
         public Integer getMileageSinceLastCharge() {
@@ -199,6 +210,13 @@ public class VechicleChargingMgmtData extends JsonResponseMessage {
     public class ChrgMgmtData {
 
         Integer clstrElecRngToEPT;
+
+        /**
+         * BMS Charging Status
+         * 0 = Not charging.
+         * 1 = Charging
+         * 5 = Waiting for Charger
+         */
         Integer bmsChrgSts;
         Integer bmsPackSOCDsp;
         Integer bmsPTCHeatReqDspCmd;
@@ -218,6 +236,9 @@ public class VechicleChargingMgmtData extends JsonResponseMessage {
         Integer bmsReserSpMintueDspCmd;
         Integer bmsAltngChrgCrntDspCmd;
         Integer bmsChrgSpRsn;
+        /**
+         * Charging remaining time
+         */
         Integer chrgngRmnngTime;
 
         public Integer getClstrElecRngToEPT() {
