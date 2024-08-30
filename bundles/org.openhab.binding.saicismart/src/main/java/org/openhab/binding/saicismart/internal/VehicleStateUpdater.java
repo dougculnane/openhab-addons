@@ -29,13 +29,11 @@ import org.openhab.binding.saicismart.internal.rest.v1.VehicleCcInfo;
 import org.openhab.binding.saicismart.internal.rest.v1.VehicleLocation;
 import org.openhab.binding.saicismart.internal.rest.v1.VehicleStatisticsBasicInfo;
 import org.openhab.binding.saicismart.internal.rest.v1.VehicleStatus;
-import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
 import org.openhab.core.library.unit.MetricPrefix;
 import org.openhab.core.library.unit.SIUnits;
-import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.ThingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,18 +78,18 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
             throw new VehicleStatusAPIException(mgmtDataResonse);
         }
 
-        // does not work
-        // updateVehicleLocation();
-        // updateVehicleCcInfo();
+        // ?? boolean engineRunning = mgmtDataResonse.getData().getRvsChargeStatus().getEngineStatus() == 1;
 
-        // boolean engineRunning = mgmtDataResonse2.getData().getChrgMgmtData()
-        // .getApplicationData().getBasicVehicleStatus().getEngineStatus() == 1;
-        boolean isCharging = mgmtDataResonse.getData().getChrgMgmtData().getBmsChrgSts() == 1;
+        Integer chrgingState = mgmtDataResonse.getData().getChrgMgmtData().getBmsChrgSts();
+        boolean isCharging = chrgingState == 1;
+        saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_CHARGING, OnOffType.from(isCharging));
 
         // saiCiSMARTHandler.updateState(CHANNEL_ENGINE, OnOffType.from(engineRunning));
         saiCiSMARTHandler.updateState(CHANNEL_CHARGING, OnOffType.from(isCharging));
-        saiCiSMARTHandler.updateState(CHANNEL_AUXILIARY_BATTERY_VOLTAGE, new QuantityType<>(
-                mgmtDataResonse.getData().getRvsChargeStatus().getWorkingVoltage() / 100.d, Units.VOLT));
+
+        // TODO not working.
+        // saiCiSMARTHandler.updateState(CHANNEL_AUXILIARY_BATTERY_VOLTAGE, new QuantityType<>(
+        // mgmtDataResonse.getData().getRvsChargeStatus().getWorkingVoltage() / 100.d, Units.VOLT));
 
         saiCiSMARTHandler.updateState(CHANNEL_SOC,
                 new DecimalType(mgmtDataResonse.getData().getChrgMgmtData().getBmsPackSOCDsp() / 10.d));
@@ -110,6 +108,9 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
         saiCiSMARTHandler.updateState(CHANNEL_RANGE_ELECTRIC,
                 new QuantityType<>(mgmtDataResonse.getData().getRvsChargeStatus().getFuelRangeElec() / 10.d,
                         MetricPrefix.KILO(SIUnits.METRE)));
+
+        // TODO new plugged in state or charging state..?
+        Integer gunState = mgmtDataResonse.getData().getRvsChargeStatus().getChargingGunState();
 
         // VehicleLocation vehicleLocationResponse = saiCiSMARTHandler.getBridgeHandler().sendRequest(
         // new VehicleLocation(),
@@ -193,16 +194,12 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
         // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_SWITCH_AC, OnOffType.from(acActive));
         // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_REMOTE_AC_STATUS, new DecimalType(
         // chargingStatusResponseMessage.getApplicationData().getBasicVehicleStatus().getRemoteClimateStatus()));
-        //
-        //
-        // if (isCharging || acActive || engineRunning) {
-        // // update activity date
-        // saiCiSMARTHandler.notifyCarActivity(Instant.now(), true);
-        // }
-        //
-        // saiCiSMARTHandler.updateStatus(ThingStatus.ONLINE);
-        // return chargingStatusResponseMessage.getApplicationData();
 
+
+        if (isCharging) { // TODO || acActive || engineRunning) {
+            // update activity date
+            saiCiSMARTHandler.notifyCarActivity(Instant.now(), true);
+        }
 
         saiCiSMARTHandler.updateStatus(ThingStatus.ONLINE);
 

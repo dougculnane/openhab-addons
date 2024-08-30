@@ -19,9 +19,11 @@ import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants
 
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -30,6 +32,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList;
+import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList.Notification;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.StringType;
@@ -68,6 +72,9 @@ public class SAICiSMARTHandler extends BaseThingHandler {
     private @Nullable Future<?> pollingJob;
     private Instant lastAlarmMessage;
     private Instant lastCarActivity;
+
+    @Nullable
+    private Instant lastCarStart;
 
     /**
      * If the binding is initialized, treat the car as active (lastCarActivity = now) to get some first data.
@@ -139,26 +146,74 @@ public class SAICiSMARTHandler extends BaseThingHandler {
         pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 2,
                 SAICiSMARTBindingConstants.REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
+    SimpleDateFormat messageTImesampFormmater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private void updateStatus() {
-        if (lastCarActivity
-                .isAfter(Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS, ChronoUnit.MINUTES))) {
-            if (this.getBridgeHandler().getUid() != null && this.getBridgeHandler().getToken() != null) {
-                try {
-                    new VehicleStateUpdater(this).call();
+        try {
+            MessageNotificationList messageList = getBridgeHandler().getMessages();
+            if (messageList != null && messageList.getData().getNotifications() != null) {
+                boolean setLastMessage = false;
+                boolean setLastStart = false;
+                for (Notification notification : messageList.getData().getNotifications()) {
+                    if (notification.getVin() != null && notification.getVin().equals(config.vin)) {
+                        if (!setLastMessage) {
 
-                    if (config.abrpUserToken != null && config.abrpUserToken.length() > 0) {
-                        // String execute = ABRP.updateAbrp(ABRP_API_KEY, config.abrpUserToken,
-                        // otaRvmVehicleStatusResp25857, otaChrgMangDataResp);
-
-                        // logger.debug("ABRP: {}", execute);
+                            Date messageTime = messageTImesampFormmater.parse(notification.getMessageTime());
+                            updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_DATE,
+                                    new DateTimeType(messageTime.toInstant()));
+                            updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_CONTENT,
+                                    new StringType(notification.getContent()));
+                            setLastMessage = true;
+                        }
+                        if (!setLastStart && notification.getMessageType().equals("323")
+                                && notification.getVin().equals(config.vin)) {
+                          
+                            Instant mesageDateTime = messageTImesampFormmater.parse(notification.getMessageTime()).toInstant();
+                            
+                            // If the start is new force now to be the activity time..
+                            if (lastCarStart != null && lastCarStart.isBefore(mesageDateTime)) {
+                                notifyCarActivity(
+                                        Instant.now().minus(
+                                                SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1, ChronoUnit.MINUTES),
+                                        true);
+                                lastCarStart = mesageDateTime;
+                            } else {
+                                notifyCarActivity(mesageDateTime, false);
+                            }
+                            setLastStart = true;
+                        }
                     }
-                } catch (Exception e) {
-                    logger.warn("Could not refresh car data. {}", e.getMessage());
-                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                            "@text/addon.saicismart.error.refresh.car.data");
+                    if (setLastMessage && setLastStart) {
+                        break;
+                    }
                 }
             }
+
+            if (lastCarActivity.isAfter(
+                    Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS, ChronoUnit.MINUTES))) {
+            	if (this.getBridgeHandler().getUid() != null && this.getBridgeHandler().getToken() != null) {
+                    try {
+                        new VehicleStateUpdater(this).call();
+
+                        if (config.abrpUserToken != null && config.abrpUserToken.length() > 0) {
+                            // String execute = ABRP.updateAbrp(ABRP_API_KEY, config.abrpUserToken,
+                            // otaRvmVehicleStatusResp25857, otaChrgMangDataResp);
+
+                            // logger.debug("ABRP: {}", execute);
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Could not refresh car data. {}", e.getMessage());
+                        updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                                "@text/addon.saicismart.error.refresh.car.data");
+                    }
+                }
+            } else {
+            	updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.DISABLED);
+            }
+        } catch (Exception e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "@text/addon.saicismart.error.refresh.car.data");
+            logger.error("Update Status Error: {}", e.getMessage(), e);
         }
     }
 
@@ -224,10 +279,11 @@ public class SAICiSMARTHandler extends BaseThingHandler {
         logger.trace("Got A/C message: {}", new GsonBuilder().setPrettyPrinting().create().toJson(enableACResponse));
     }
 
-    public void notifyCarActivity(Instant now, boolean force) {
+
+    public void notifyCarActivity(Instant timeStamp, boolean force) {
         // if the car activity changed, notify the channel
-        if (force || lastCarActivity.isBefore(now)) {
-            lastCarActivity = now;
+        if (force || lastCarActivity.isBefore(timeStamp)) {
+            lastCarActivity = timeStamp;
             updateState(CHANNEL_LAST_ACTIVITY, new DateTimeType(lastCarActivity));
         }
     }

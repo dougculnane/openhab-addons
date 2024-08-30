@@ -12,8 +12,12 @@
  */
 package org.openhab.binding.saicismart.internal.rest;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.http.HttpClientTransportOverHTTP;
@@ -21,19 +25,26 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.Test;
 import org.openhab.binding.saicismart.internal.rest.v1.OauthToken;
 import org.openhab.binding.saicismart.internal.rest.v1.VehicleList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Doug Culnane
  */
 public class TestSaicApiClient {
 
+    private final Logger logger = LoggerFactory.getLogger(TestSaicApiClient.class);
+
     @Test
     public void testClient() throws Exception {
 
         String username = System.getenv("SAIC_USERNAME");
         String password = System.getenv("SAIC_PASSWORD");
-        assertNotNull(username, "Set the environment variable: SAIC_USERNAME");
-        assertNotNull(password, "Set the environment variable: SAIC_PASSWORD");
+        if (username == null || password == null) {
+            logger.warn(
+                    "To activate SaicApiClient tests set the SAIC_USERNAME and SAIC_PASSWORD environment variables.");
+            return;
+        }
 
         HttpClient httpClient = new HttpClient(new HttpClientTransportOverHTTP(), new SslContextFactory(true));
         httpClient.start();
@@ -46,12 +57,26 @@ public class TestSaicApiClient {
         String vin = vehicleList.getData().getVinList()[0].getVin();
 
         assertTrue(client.getVehicleStatus(token, vin).isSuccess());
-        assertTrue(client.getVehicleChargingMgmtData(token, vin).isSuccess());
         assertTrue(client.getVehicleStatisticsBasicInfo(token, vin).isSuccess());
         assertTrue(client.getVehicleChargingMgmtData(token, vin).isSuccess());
+        assertTrue(client.getMessageNotificationList(token).isSuccess());
+
+        // Not much useful info
+        // assertTrue(client.getVehicleGeoFence(token, vin).isSuccess());
+        // assertTrue(client.getVehicleStatisticsBasicInfo(token, vin).isSuccess());
 
         // Failing
+        // assertTrue(client.getVehicleInfo(token, vin).isSuccess());
+        // assertTrue(client.getVehicleStatusClassified(token, vin).isSuccess());
+        // assertTrue(client.getMessageList(token, vin).isSuccess());
         // assertTrue(client.getVehicleCcInfo(token, vin).isSuccess());
         // assertTrue(client.getVehicleLocation(token, vin).isSuccess());
+    }
+
+    @Test
+    public void testTimeFormat() {
+        String message = "2024-08-28 19:17:00";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        ZonedDateTime mesageDateTime = LocalDateTime.parse(message, formatter).atZone(ZoneId.systemDefault());
     }
 }

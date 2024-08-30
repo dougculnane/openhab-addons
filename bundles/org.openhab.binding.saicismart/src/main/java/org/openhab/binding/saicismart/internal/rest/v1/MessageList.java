@@ -15,7 +15,7 @@ package org.openhab.binding.saicismart.internal.rest.v1;
 /**
  * @author Doug Culnane
  */
-public class VehicleStatus extends JsonResponseMessage {
+public class MessageList extends JsonResponseMessage {
 
     String data;
 

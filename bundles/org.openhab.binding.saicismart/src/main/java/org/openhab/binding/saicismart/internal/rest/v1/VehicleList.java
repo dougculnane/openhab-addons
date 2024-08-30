@@ -53,6 +53,7 @@ public class VehicleList extends JsonResponseMessage {
         Boolean isCurrentVehicle;
         Boolean isSubaccount;
         String vin;
+        VehicleModelConfiguration[] vehicleModelConfiguration;
 
         public VinListItem() {
         }
@@ -135,6 +136,44 @@ public class VehicleList extends JsonResponseMessage {
 
         public void setVin(String vin) {
             this.vin = vin;
+        }
+
+        public VehicleModelConfiguration[] getVehicleModelConfiguration() {
+            return vehicleModelConfiguration;
+        }
+
+        public void setVehicleModelConfiguration(VehicleModelConfiguration[] vehicleModelConfiguration) {
+            this.vehicleModelConfiguration = vehicleModelConfiguration;
+        }
+    }
+
+    public class VehicleModelConfiguration {
+        String itemName;
+        String itemCode;
+        String itemValue;
+
+        public String getItemName() {
+            return itemName;
+        }
+
+        public void setItemName(String itemName) {
+            this.itemName = itemName;
+        }
+
+        public String getItemCode() {
+            return itemCode;
+        }
+
+        public void setItemCode(String itemCode) {
+            this.itemCode = itemCode;
+        }
+
+        public String getItemValue() {
+            return itemValue;
+        }
+
+        public void setItemValue(String itemValue) {
+            this.itemValue = itemValue;
         }
     }
 }
