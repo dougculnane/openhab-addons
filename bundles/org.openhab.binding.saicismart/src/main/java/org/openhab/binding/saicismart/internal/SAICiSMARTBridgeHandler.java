@@ -99,7 +99,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
                     "@text/thing-type.config.saicismart.bridge.username.toolong");
             return;
         }
-        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 5,
+        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 0,
                 SAICiSMARTBindingConstants.REFRESH_INTERVAL, TimeUnit.MINUTES);
     }
 
@@ -141,9 +141,6 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
         try {
             this.messageList = saicApiClient.getMessageNotificationList(getToken());
             updateStatus(ThingStatus.ONLINE);
-        } catch (org.eclipse.jetty.client.HttpResponseException e) {
-            logger.warn("Update messages error: {}", e.getMessage());
-            login();
         } catch (TimeoutException | InterruptedException | ExecutionException | IOException e) {
             logger.warn("Update messages error: {}", e.getMessage());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
