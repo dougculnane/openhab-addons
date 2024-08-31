@@ -150,7 +150,8 @@ public class SAICiSMARTHandler extends BaseThingHandler {
 
         // just started, make sure we start querying
         notifyCarActivity(ZonedDateTime.now(getTimeZone()), true);
-        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 2,
+        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 
+        		SAICiSMARTBindingConstants.REFRESH_INTERVAL,
                 SAICiSMARTBindingConstants.REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
 
@@ -200,7 +201,7 @@ public class SAICiSMARTHandler extends BaseThingHandler {
 
             if (lastCarActivity.isAfter(
                     ZonedDateTime.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS, ChronoUnit.MINUTES))) {
-            	if (this.getBridgeHandler().getUid() != null && this.getBridgeHandler().getToken() != null) {
+                if (this.getBridgeHandler().getUid() != null && this.getBridgeHandler().getToken() != null) {
                     try {
                         new VehicleStateUpdater(this).call();
 
@@ -217,7 +218,7 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                     }
                 }
             } else {
-            	updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.DISABLED);
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.NONE);
             }
         } catch (Exception e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
