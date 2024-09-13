@@ -143,8 +143,7 @@ public class SAICiSMARTHandler extends BaseThingHandler {
 
         // just started, make sure we start querying
         notifyCarActivity(Instant.now(), true);
-        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 
-        		SAICiSMARTBindingConstants.REFRESH_INTERVAL,
+        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, SAICiSMARTBindingConstants.REFRESH_INTERVAL,
                 SAICiSMARTBindingConstants.REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
     SimpleDateFormat messageTImesampFormmater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -206,6 +205,9 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                         logger.warn("Could not refresh car data. {}", e.getMessage());
                         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
                                 "@text/addon.saicismart.error.refresh.car.data");
+                        if (e.getMessage().contains("Authentication")) {
+                            this.getBridgeHandler().relogin();
+                        }
                     }
                 }
             } else {
