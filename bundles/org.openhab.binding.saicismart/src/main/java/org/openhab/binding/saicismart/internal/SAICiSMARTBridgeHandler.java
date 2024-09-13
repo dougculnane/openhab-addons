@@ -17,6 +17,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.ExecutionException;
@@ -57,6 +59,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
 
     private @Nullable SAICiSMARTBridgeConfiguration config;
 
+    private @Nullable Instant tokenExpires;
     private @Nullable String token;
     private @Nullable String uid;
     private @Nullable MessageNotificationList messageList;
@@ -104,11 +107,10 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
     }
 
     private void updateStatus() {
-        if (uid == null || token == null) {
+        if (uid == null || token == null || (tokenExpires != null && tokenExpires.isBefore(Instant.now()))) {
             login();
-        } else {
-            updateMessages();
         }
+        updateMessages();
     }
 
     private void login() {
@@ -116,11 +118,14 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
         try {
 
             // login
-            OauthToken loginRespounse = saicApiClient.getOauthToken(config.username, config.password);
-            if (loginRespounse.isSuccess()) {
-                this.uid = loginRespounse.getData().getUser_id();
-                this.token = loginRespounse.getData().getAccess_token();
-                // TODO check expire time and refresh before.
+            OauthToken loginResponse = saicApiClient.getOauthToken(config.username, config.password);
+            if (loginResponse.isSuccess()) {
+                this.uid = loginResponse.getData().getUser_id();
+                this.token = loginResponse.getData().getAccess_token();
+                if (loginResponse.getExpires_in() != null) {
+                    tokenExpires = Instant.now();
+                    tokenExpires.plus(Duration.ofSeconds(loginResponse.getExpires_in()));
+                }
             }
 
             // get vehicles
@@ -130,7 +135,6 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
             }
 
             updateStatus(ThingStatus.ONLINE);
-            updateMessages();
 
         } catch (Exception e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
@@ -144,6 +148,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
         } catch (TimeoutException | InterruptedException | ExecutionException | IOException e) {
             logger.warn("Update messages error: {}", e.getMessage());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+            relogin();
         }
     }
 
@@ -183,6 +188,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
     public void relogin() {
         uid = null;
         token = null;
+        login();
     }
 
     @Override
