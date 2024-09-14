@@ -64,7 +64,7 @@ public class SaicApiClient {
         this.httpClient = httpClient;
     }
 
-    public OauthToken getOauthToken(String username, String password)
+    public OauthToken getOauthToken(String username, String password, String language)
             throws IOException, InterruptedException, TimeoutException, ExecutionException {
         if (deviceId == null) {
             deviceId = new byte[64];
@@ -73,8 +73,21 @@ public class SaicApiClient {
         return sendRequest(new OauthToken(), URL_ROOT_V1 + "oauth/token", HttpMethod.POST,
                 "grant_type=password&username=" + username + "&password=" + HashUtils.sha1(password)
                         + "&scope=all&deviceId=" + HexUtils.bytesToHex(deviceId)
-                        + "###com.saicmotor.europecar&deviceType=0&loginType=2&language=DE",
+                        + "###europecar&deviceType=1&loginType=" + getLoginType(username) + "&language=" + language,
                 "application/x-www-form-urlencoded", "", "");
+    }
+
+    /**
+     * "2" if username_is_email else "1",
+     * 
+     * @param username
+     * @return
+     */
+    private int getLoginType(String username) {
+        if (username.contains("@")) {
+            return 2;
+        }
+        return 1;
     }
 
     public VehicleList getVehicleList(String token)

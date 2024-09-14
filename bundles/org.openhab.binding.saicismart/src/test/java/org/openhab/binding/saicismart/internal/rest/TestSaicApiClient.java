@@ -50,7 +50,7 @@ public class TestSaicApiClient {
         httpClient.start();
 
         SaicApiClient client = new SaicApiClient(httpClient);
-        OauthToken oauthToken = client.getOauthToken(username, password);
+        OauthToken oauthToken = client.getOauthToken(username, password, "EN");
 
         String token = oauthToken.getData().getAccess_token();
         VehicleList vehicleList = client.getVehicleList(token);
