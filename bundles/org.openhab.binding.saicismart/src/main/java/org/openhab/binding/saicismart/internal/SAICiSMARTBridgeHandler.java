@@ -67,12 +67,14 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
     private @Nullable VinListItem[] vinList;
     private HttpClient httpClient;
     private SaicApiClient saicApiClient;
+    private String language;
 
     private @Nullable Future<?> pollingJob;
 
-    public SAICiSMARTBridgeHandler(Bridge bridge, HttpClient httpClient) {
+    public SAICiSMARTBridgeHandler(Bridge bridge, HttpClient httpClient, String language) {
         super(bridge);
         this.httpClient = httpClient;
+        this.language = language;
         this.saicApiClient = new SaicApiClient(httpClient);
     }
 
@@ -118,7 +120,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
         try {
 
             // login
-            OauthToken loginResponse = saicApiClient.getOauthToken(config.username, config.password);
+            OauthToken loginResponse = saicApiClient.getOauthToken(config.username, config.password, language);
             if (loginResponse.isSuccess()) {
                 this.uid = loginResponse.getData().getUser_id();
                 this.token = loginResponse.getData().getAccess_token();
