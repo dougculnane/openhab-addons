@@ -32,8 +32,8 @@ import net.heberling.ismart.java.rest.api.v1.VehicleList.VinListItem;
 
 /**
  *
- * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
  */
 @NonNullByDefault
 public class VehicleDiscovery extends AbstractDiscoveryService implements DiscoveryService, ThingHandlerService {

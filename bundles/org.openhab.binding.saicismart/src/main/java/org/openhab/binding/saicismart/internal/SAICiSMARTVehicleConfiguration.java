@@ -18,8 +18,8 @@ import org.eclipse.jdt.annotation.Nullable;
 /**
  * The {@link SAICiSMARTVehicleConfiguration} class contains fields mapping thing configuration parameters.
  *
- * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
  */
 @NonNullByDefault
 public class SAICiSMARTVehicleConfiguration {

@@ -19,6 +19,7 @@
 			<channel id="range-electric" typeId="range-electric-channel"/>
 			<channel id="soc" typeId="system.battery-level"/>
 			<channel id="power" typeId="power-channel"/>
+			<channel id="plugged-in" typeId="plugged-in-channel"/>
 			<channel id="charging" typeId="charging-channel"/>
 			<channel id="engine" typeId="engine-channel"/>
 			<channel id="speed" typeId="speed-channel"/>
@@ -115,6 +116,11 @@
 			<tag>Power</tag>
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+	<channel-type id="plugged-in-channel">
+		<item-type>Switch</item-type>
+		<label>Plugged In</label>
+		<state readOnly="true"/>
 	</channel-type>
 	<channel-type id="charging-channel">
 		<item-type>Switch</item-type>

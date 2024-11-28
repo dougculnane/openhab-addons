@@ -123,6 +123,10 @@ String 		MG5_Vehicle_Message			"MG5 Vehicle Message"					{channel="saicismart:ve
 
 ## Limitations
 
+The SAIC API has changed and so some channels that were available are no longer available.
+
 The advanced channel "force refresh" if used regularly will drain the 12v car battery and you will be unable to start it!
 
 Only European iSMART accounts and vehicles are supported. API host configuration and testing for other markets is required.
+
+A Better Routeplanner integration is no longer supported at the moment.

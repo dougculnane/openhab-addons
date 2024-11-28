@@ -36,15 +36,12 @@ import net.heberling.ismart.java.rest.SaicApiClient;
 import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData;
 import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData.ChrgMgmtData;
 import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData.RvsChargeStatus;
-import net.heberling.ismart.java.rest.api.v1.VehicleCcInfo;
-import net.heberling.ismart.java.rest.api.v1.VehicleLocation;
-import net.heberling.ismart.java.rest.api.v1.VehicleStatisticsBasicInfo;
 import net.heberling.ismart.java.rest.api.v1.VehicleStatus;
 import net.heberling.ismart.java.rest.exceptions.VehicleStatusAPIException;
 
 /**
  * @author Markus Heberling - Initial contribution
- * @author Doug Culnane
+ * @author Doug Culnane - SAIC REST API
  */
 @NonNullByDefault
 class VehicleStateUpdater implements Callable<VehicleStatus> {
@@ -61,11 +58,9 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
     @Override
     public VehicleStatus call() throws URISyntaxException, ExecutionException, InterruptedException, TimeoutException,
             VehicleStatusAPIException, IOException {
-
         // get status of vehicle
         VehicleStatus statusResponse = saicApiClient.getVehicleStatus(saiCiSMARTHandler.getBridgeHandler().getToken(),
                 saiCiSMARTHandler.config.vin);
-
         if (!statusResponse.isSuccess()) {
             final Integer resultCode = statusResponse.getCode();
             if (resultCode == 2 || resultCode == 3) {
@@ -85,9 +80,9 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
         Integer chrgingState = null;
 
         if (mgmtDataResonse != null && mgmtDataResonse.getData() != null) {
-
             ChrgMgmtData chrgMgmtDat = mgmtDataResonse.getData().getChrgMgmtData();
             if (chrgMgmtDat != null) {
+
 
                 chrgingState = chrgMgmtDat.getBmsChrgSts();
 
@@ -109,9 +104,6 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
 
             RvsChargeStatus rvsChargeStatus = mgmtDataResonse.getData().getRvsChargeStatus();
             if (rvsChargeStatus != null) {
-
-                // ?? boolean engineRunning = mgmtDataResonse.getData().getRvsChargeStatus().getEngineStatus() == 1;
-
                 Integer mileage = rvsChargeStatus.getMileage();
                 if (mileage != null && mileage > 0) {
                     saiCiSMARTHandler.updateState(CHANNEL_ODOMETER,
@@ -124,13 +116,14 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
                             new QuantityType<>(fuelRangeElec / 10.d, MetricPrefix.KILO(SIUnits.METRE)));
                 }
 
-                // TODO new plugged in state or charging state..?
                 Integer gunState = rvsChargeStatus.getChargingGunState();
+                boolean pluggedIn = gunState != null && gunState == 1;
+                saiCiSMARTHandler.updateState(CHANNEL_PLUGGED_IN, OnOffType.from(pluggedIn));
             }
 
 
 
-        if (chrgingState == 1) { // TODO || acActive || engineRunning) {
+        if (chrgingState != null) { // TODO || acActive || engineRunning) {
             // update activity date
             saiCiSMARTHandler.notifyCarActivity(Instant.now(), true);
             // Double power = (chargingStatusResponseMessage.getApplicationData().getBmsPackCrnt() * 0.05d - 1000.0d)
@@ -221,9 +214,11 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
             // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_REMOTE_AC_STATUS, new DecimalType(
             // chargingStatusResponseMessage.getApplicationData().getBasicVehicleStatus().getRemoteClimateStatus()));
 
+
+            // boolean engineRunning = mgmtDataResonse.getData().getRvsChargeStatus().getEngineStatus() == 1;
+
             boolean isCharging = chrgingState != null && chrgingState == 1;
             saiCiSMARTHandler.updateState(CHANNEL_CHARGING, OnOffType.from(isCharging));
-
             if (isCharging) { // TODO || acActive || engineRunning) {
                 // update activity date
                 saiCiSMARTHandler.notifyCarActivity(Instant.now(), true);
@@ -231,60 +226,6 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
         }
 
         saiCiSMARTHandler.updateStatus(ThingStatus.ONLINE);
-
         return statusResponse;
-    }
-
-    private void updateVehicleCcInfo() throws IOException, InterruptedException, TimeoutException, ExecutionException {
-        VehicleCcInfo response = saicApiClient.getVehicleCcInfo(saiCiSMARTHandler.getBridgeHandler().getToken(),
-                saiCiSMARTHandler.config.vin);
-        if (!response.isSuccess()) {
-            logger.warn("Vehicle CC info update error: {}", response);
-            return;
-        }
-    }
-
-    private void updateVehicleStatisticsBasicInfo()
-            throws IOException, InterruptedException, TimeoutException, ExecutionException {
-        VehicleStatisticsBasicInfo response = saicApiClient.getVehicleStatisticsBasicInfo(
-                saiCiSMARTHandler.getBridgeHandler().getToken(), saiCiSMARTHandler.config.vin);
-        if (!response.isSuccess()) {
-            logger.warn("Vehicle statistics info update error: {}", response);
-            return;
-        }
-    }
-
-    private void updateVehicleLocation()
-            throws IOException, InterruptedException, TimeoutException, ExecutionException {
-
-        VehicleLocation response = saicApiClient.getVehicleLocation(saiCiSMARTHandler.getBridgeHandler().getToken(),
-                saiCiSMARTHandler.config.vin);
-        if (!response.isSuccess()) {
-            logger.warn("Vehicle location update error: {}", response);
-            return;
-        }
-
-        // saiCiSMARTHandler.updateState(CHANNEL_SPEED, new QuantityType<>(
-        // chargingStatusResponseMessage.getApplicationData().getGpsPosition().getWayPoint().getSpeed() / 10.d,
-        // SIUnits.KILOMETRE_PER_HOUR));
-        // saiCiSMARTHandler.updateState(CHANNEL_HEADING,
-        // new QuantityType<>(
-        // chargingStatusResponseMessage.getApplicationData().getGpsPosition().getWayPoint().getHeading(),
-        // Units.DEGREE_ANGLE));
-        // saiCiSMARTHandler.updateState(CHANNEL_LOCATION,
-        // new PointType(
-        // new DecimalType(chargingStatusResponseMessage.getApplicationData().getGpsPosition()
-        // .getWayPoint().getPosition().getLatitude() / 1000000d),
-        // new DecimalType(chargingStatusResponseMessage.getApplicationData().getGpsPosition()
-        // .getWayPoint().getPosition().getLongitude() / 1000000d),
-        // new DecimalType(chargingStatusResponseMessage.getApplicationData().getGpsPosition()
-        // .getWayPoint().getPosition().getAltitude())));
-
-        // saiCiSMARTHandler
-        // .updateState(SAICiSMARTBindingConstants.CHANNEL_LAST_POSITION_UPDATE,
-        // new DateTimeType(ZonedDateTime.ofInstant(
-        // Instant.ofEpochSecond(chargingStatusResponseMessage.getApplicationData()
-        // .getGpsPosition().getTimestamp4Short().getSeconds()),
-        // saiCiSMARTHandler.getTimeZone())));
     }
 }

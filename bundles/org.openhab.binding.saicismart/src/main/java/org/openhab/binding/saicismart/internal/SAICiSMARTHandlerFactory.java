@@ -37,8 +37,8 @@ import org.osgi.service.component.annotations.Reference;
  * The {@link SAICiSMARTHandlerFactory} is responsible for creating things and thing
  * handlers.
  *
- * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
  */
 @NonNullByDefault
 @Component(configurationPid = "binding.saicismart", service = ThingHandlerFactory.class)

@@ -28,6 +28,7 @@ import java.util.concurrent.TimeoutException;
 
 import javax.xml.bind.DatatypeConverter;
 
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.util.StringContentProvider;
@@ -51,10 +52,10 @@ import net.heberling.ismart.java.rest.api.v1.VehicleList.VinListItem;
  * The {@link SAICiSMARTBridgeHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
- * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
  */
-// @NonNullByDefault
+@NonNullByDefault
 public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
 
     private final Logger logger = LoggerFactory.getLogger(SAICiSMARTBridgeHandler.class);
@@ -66,7 +67,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
     private @Nullable String uid;
     private @Nullable MessageNotificationList messageList;
 
-    private @Nullable VinListItem[] vinList;
+    private VinListItem[] vinList;
     private HttpClient httpClient;
     private SaicApiClient saicApiClient;
     private String language;
@@ -78,6 +79,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
         this.httpClient = httpClient;
         this.language = language;
         this.saicApiClient = new SaicApiClient(httpClient);
+        this.vinList = new VinListItem[0];
     }
 
     @Override
@@ -118,9 +120,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
     }
 
     private void login() {
-
         try {
-
             // login
             OauthToken loginResponse = saicApiClient.getOauthToken(config.username, config.password, language);
             if (loginResponse.isSuccess()) {
@@ -134,12 +134,11 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
 
             // get vehicles
             VehicleList vehiclesResponse = saicApiClient.getVehicleList(token);
-            if (vehiclesResponse.isSuccess()) {
+            if (vehiclesResponse.isSuccess() && vehiclesResponse.getData() != null
+                    && vehiclesResponse.getData().getVinList() != null) {
                 this.vinList = vehiclesResponse.getData().getVinList();
             }
-
             updateStatus(ThingStatus.ONLINE);
-
         } catch (Exception e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
         }
@@ -179,8 +178,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
     }
 
     public VinListItem[] getVinList() {
-        VinListItem[] vinList = this.vinList;
-        return vinList != null ? vinList : new VinListItem[0];
+        return this.vinList;
     }
 
     public String sendRequest(String request, String endpoint)
@@ -208,6 +206,7 @@ public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
         return saicApiClient;
     }
 
+    @Nullable
     public MessageNotificationList getMessages() {
         return messageList;
     }

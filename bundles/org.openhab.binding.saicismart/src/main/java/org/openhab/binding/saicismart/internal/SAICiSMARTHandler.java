@@ -62,8 +62,8 @@ import net.heberling.ismart.java.rest.api.v1.MessageNotificationList.Notificatio
  * The {@link SAICiSMARTHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  * 
- * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
  */
 @NonNullByDefault
 public class SAICiSMARTHandler extends BaseThingHandler {
@@ -73,8 +73,10 @@ public class SAICiSMARTHandler extends BaseThingHandler {
     @Nullable
     SAICiSMARTVehicleConfiguration config;
     private @Nullable Future<?> pollingJob;
+
     private Instant lastAlarmMessage;
     private Instant lastCarActivity;
+
 
     @Nullable
     private Instant lastCarStart;
@@ -97,6 +99,7 @@ public class SAICiSMARTHandler extends BaseThingHandler {
             // reset channel to off
             updateState(CHANNEL_FORCE_REFRESH, OnOffType.from(false));
             // update internal activity date, to query the car for about a minute
+
             notifyCarActivity(
                     Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1, ChronoUnit.MINUTES), true);
         } else if (channelUID.getId().equals(CHANNEL_SWITCH_AC) && command == OnOffType.ON) {
@@ -109,6 +112,10 @@ public class SAICiSMARTHandler extends BaseThingHandler {
             updateState(CHANNEL_SWITCH_AC, OnOffType.OFF);
             // disable air conditioning
             logger.warn("A/C Off Command failed. Not impelmented");
+
+            notifyCarActivity(Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1,
+                    ChronoUnit.MINUTES), true);
+
         } else if (channelUID.getId().equals(CHANNEL_LAST_ACTIVITY)
                 && command instanceof DateTimeType commnadAsDateTimeType) {
             // update internal activity date from external date
@@ -152,8 +159,15 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                 for (Notification notification : messageList.getData().getNotifications()) {
                     if (notification.getVin() != null && notification.getVin().equals(config.vin)) {
                         if (!setLastMessage) {
+<<<<<<< HEAD
 
                             Date messageTime = messageTImesampFormmater.parse(notification.getMessageTime());
+=======
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                            ZonedDateTime mesageDateTime = LocalDateTime.parse(notification.getMessageTime(), formatter)
+                                    .atZone(getTimeZone());
+
+>>>>>>> bb1af8f32a ([saicismart] Tidy code and pluged in channel.)
                             updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_DATE,
                                     new DateTimeType(messageTime.toInstant()));
                             updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_CONTENT,
@@ -191,10 +205,7 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                         new VehicleStateUpdater(this).call();
 
                         if (config.abrpUserToken != null && config.abrpUserToken.length() > 0) {
-                            // String execute = ABRP.updateAbrp(ABRP_API_KEY, config.abrpUserToken,
-                            // otaRvmVehicleStatusResp25857, otaChrgMangDataResp);
-
-                            // logger.debug("ABRP: {}", execute);
+                            logger.debug("ABRP integration no longer supported at the moment.");
                         }
                     } catch (Exception e) {
                         logger.warn("Could not refresh car data. {}", e.getMessage());

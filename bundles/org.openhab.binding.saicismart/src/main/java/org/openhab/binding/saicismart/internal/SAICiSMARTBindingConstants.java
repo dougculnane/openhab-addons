@@ -19,8 +19,8 @@ import org.openhab.core.thing.ThingTypeUID;
  * The {@link SAICiSMARTBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
- * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
  */
 @NonNullByDefault
 public class SAICiSMARTBindingConstants {
@@ -38,25 +38,8 @@ public class SAICiSMARTBindingConstants {
     public static final int POLLING_ACTIVE_MINS = 10;
 
     /**
-     * URL of the SAIC API Host.
+     * API Key for ABRP integration.
      */
-    private static final String API_HOST_URL = "https://tap-eu.soimt.com";
-
-    /**
-     * https://github.com/SAIC-iSmart-API/documentation?tab=readme-ov-file#api-v11
-     */
-    public static final String API_ENDPOINT_V11 = API_HOST_URL + "/TAP.Web/ota.mp";
-
-    /**
-     * https://github.com/SAIC-iSmart-API/documentation?tab=readme-ov-file#api-v21
-     */
-    public static final String API_ENDPOINT_V21 = API_HOST_URL + "/TAP.Web/ota.mpv21";
-
-    /**
-     * https://github.com/SAIC-iSmart-API/documentation?tab=readme-ov-file#api-v30
-     */
-    public static final String API_ENDPOINT_V30 = API_HOST_URL + "/TAP.Web/ota.mpv30";
-
     public static final String ABRP_API_KEY = "8cfc314b-03cd-4efe-ab7d-4431cd8f2e2d";
 
     // List of all Thing Type UIDs
@@ -69,6 +52,7 @@ public class SAICiSMARTBindingConstants {
     public static final String CHANNEL_SOC = "soc";
     public static final String CHANNEL_POWER = "power";
     public static final String CHANNEL_ENGINE = "engine";
+    public static final String CHANNEL_PLUGGED_IN = "plugged-in";
     public static final String CHANNEL_CHARGING = "charging";
     public static final String CHANNEL_TYRE_PRESSURE_FRONT_LEFT = "tyre-pressure-front-left";
     public static final String CHANNEL_TYRE_PRESSURE_FRONT_RIGHT = "tyre-pressure-front-right";
