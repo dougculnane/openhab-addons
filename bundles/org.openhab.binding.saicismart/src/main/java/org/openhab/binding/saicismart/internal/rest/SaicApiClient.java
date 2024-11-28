@@ -210,9 +210,10 @@ public class SaicApiClient {
         if (eventId != null && !eventId.isBlank()) {
             request.header("event-id", eventId);
         }
-        logger.info("Request: {}", request);
-        System.out.println(request);
-
+        if (logger.isDebugEnabled()) {
+        	logger.debug("Request: {}", request);
+        }
+        
         ContentResponse response = request.send();
         if (response.getHeaders().get("app-content-encrypted") != null
                 && response.getHeaders().get("app-content-encrypted").equals("1")) {
@@ -220,8 +221,9 @@ public class SaicApiClient {
 
             String decryptedString = EncryptionUtils.decryptResponse(response.getHeaders().get("app-send-date"),
                     response.getHeaders().get("original-content-type"), responseEncripted);
-            logger.info("Response: {}", decryptedString);
-            System.out.println(decryptedString);
+            if (logger.isDebugEnabled()) {
+            	logger.debug("Response: {}", decryptedString);
+            }
             responseMessage = (T) gson.fromJson(decryptedString, responseMessage.getClass());
         } else {
             logger.warn("Unexpected Response: {}", response.getContentAsString());
