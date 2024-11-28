@@ -22,7 +22,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.saicismart.internal.rest.SaicApiClient;
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
@@ -33,6 +32,7 @@ import org.openhab.core.thing.ThingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.heberling.ismart.java.rest.SaicApiClient;
 import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData;
 import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData.ChrgMgmtData;
 import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData.RvsChargeStatus;
@@ -44,7 +44,7 @@ import net.heberling.ismart.java.rest.exceptions.VehicleStatusAPIException;
 
 /**
  * @author Markus Heberling - Initial contribution
- * @author Doug Culnane - Rest API
+ * @author Doug Culnane
  */
 @NonNullByDefault
 class VehicleStateUpdater implements Callable<VehicleStatus> {

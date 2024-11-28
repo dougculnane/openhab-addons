@@ -61,7 +61,8 @@ import net.heberling.ismart.java.rest.api.v1.MessageNotificationList.Notificatio
 /**
  * The {@link SAICiSMARTHandler} is responsible for handling commands, which are
  * sent to one of the channels.
- *
+ * 
+ * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
  */
 @NonNullByDefault
@@ -256,5 +257,6 @@ public class SAICiSMARTHandler extends BaseThingHandler {
     //
     // notifyCarActivity(time, false);
     // }
+
 
 }

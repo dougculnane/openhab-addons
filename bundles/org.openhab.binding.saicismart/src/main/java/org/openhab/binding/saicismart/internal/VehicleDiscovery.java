@@ -32,6 +32,7 @@ import net.heberling.ismart.java.rest.api.v1.VehicleList.VinListItem;
 
 /**
  *
+ * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
  */
 @NonNullByDefault

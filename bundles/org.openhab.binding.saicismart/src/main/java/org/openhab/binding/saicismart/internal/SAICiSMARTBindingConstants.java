@@ -19,6 +19,7 @@ import org.openhab.core.thing.ThingTypeUID;
  * The {@link SAICiSMARTBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
+ * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
  */
 @NonNullByDefault

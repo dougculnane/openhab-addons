@@ -31,7 +31,6 @@ import javax.xml.bind.DatatypeConverter;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.util.StringContentProvider;
-import org.openhab.binding.saicismart.internal.rest.SaicApiClient;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
@@ -42,6 +41,7 @@ import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.heberling.ismart.java.rest.SaicApiClient;
 import net.heberling.ismart.java.rest.api.v1.MessageNotificationList;
 import net.heberling.ismart.java.rest.api.v1.OauthToken;
 import net.heberling.ismart.java.rest.api.v1.VehicleList;
@@ -51,6 +51,7 @@ import net.heberling.ismart.java.rest.api.v1.VehicleList.VinListItem;
  * The {@link SAICiSMARTBridgeHandler} is responsible for handling commands, which are
  * sent to one of the channels.
  *
+ * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
  */
 // @NonNullByDefault

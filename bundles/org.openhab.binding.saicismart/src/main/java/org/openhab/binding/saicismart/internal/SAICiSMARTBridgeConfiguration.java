@@ -17,6 +17,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 /**
  * The {@link SAICiSMARTBridgeConfiguration} class contains fields mapping thing configuration parameters.
  *
+ * @author Doug Culnane
  * @author Markus Heberling - Initial contribution
  */
 @NonNullByDefault
