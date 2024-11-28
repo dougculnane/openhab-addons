@@ -23,10 +23,11 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.http.HttpClientTransportOverHTTP;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.Test;
-import org.openhab.binding.saicismart.internal.rest.v1.OauthToken;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.heberling.ismart.java.rest.api.v1.OauthToken;
+import net.heberling.ismart.java.rest.api.v1.VehicleList;
 
 /**
  * @author Doug Culnane

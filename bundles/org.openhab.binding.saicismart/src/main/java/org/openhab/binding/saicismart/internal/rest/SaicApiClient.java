@@ -24,25 +24,25 @@ import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.eclipse.jetty.http.HttpMethod;
-import org.openhab.binding.saicismart.internal.rest.v1.JsonResponseMessage;
-import org.openhab.binding.saicismart.internal.rest.v1.MessageList;
-import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList;
-import org.openhab.binding.saicismart.internal.rest.v1.OauthToken;
-import org.openhab.binding.saicismart.internal.rest.v1.VechicleChargingMgmtData;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleCcInfo;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleList;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleLocation;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleStatisticsBasicInfo;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
-import net.heberling.ismart.rest.APIConfig;
-import net.heberling.ismart.rest.EncryptionUtils;
-import net.heberling.ismart.rest.HashUtils;
-import net.heberling.ismart.rest.HexUtils;
+import net.heberling.ismart.java.rest.APIConfig;
+import net.heberling.ismart.java.rest.EncryptionUtils;
+import net.heberling.ismart.java.rest.HashUtils;
+import net.heberling.ismart.java.rest.HexUtils;
+import net.heberling.ismart.java.rest.api.v1.JsonResponseMessage;
+import net.heberling.ismart.java.rest.api.v1.MessageList;
+import net.heberling.ismart.java.rest.api.v1.MessageNotificationList;
+import net.heberling.ismart.java.rest.api.v1.OauthToken;
+import net.heberling.ismart.java.rest.api.v1.VechicleChargingMgmtData;
+import net.heberling.ismart.java.rest.api.v1.VehicleCcInfo;
+import net.heberling.ismart.java.rest.api.v1.VehicleList;
+import net.heberling.ismart.java.rest.api.v1.VehicleLocation;
+import net.heberling.ismart.java.rest.api.v1.VehicleStatisticsBasicInfo;
+import net.heberling.ismart.java.rest.api.v1.VehicleStatus;
 
 /**
  * SIAC API HTTP Client implementation using org.eclipse.jetty.client.
@@ -198,7 +198,7 @@ public class SaicApiClient {
             request.content(new StringContentProvider(encryptedBody), contentType);
         }
 
-        String replace = !net.heberling.ismart.rest.StringUtils.isEmpty(endpoint.toString())
+        String replace = !net.heberling.ismart.java.rest.StringUtils.isEmpty(endpoint.toString())
                 ? endpoint.toString().replace(EncryptionUtils.BASE_URL_P, "/")
                 : "";
         request.header("app-verification-string", EncryptionUtils.calculateRequestVerification(replace, appSendDate,
@@ -211,9 +211,9 @@ public class SaicApiClient {
             request.header("event-id", eventId);
         }
         if (logger.isDebugEnabled()) {
-        	logger.debug("Request: {}", request);
+            logger.debug("Request: {}", request);
         }
-        
+
         ContentResponse response = request.send();
         if (response.getHeaders().get("app-content-encrypted") != null
                 && response.getHeaders().get("app-content-encrypted").equals("1")) {
@@ -222,7 +222,7 @@ public class SaicApiClient {
             String decryptedString = EncryptionUtils.decryptResponse(response.getHeaders().get("app-send-date"),
                     response.getHeaders().get("original-content-type"), responseEncripted);
             if (logger.isDebugEnabled()) {
-            	logger.debug("Response: {}", decryptedString);
+                logger.debug("Response: {}", decryptedString);
             }
             responseMessage = (T) gson.fromJson(decryptedString, responseMessage.getClass());
         } else {

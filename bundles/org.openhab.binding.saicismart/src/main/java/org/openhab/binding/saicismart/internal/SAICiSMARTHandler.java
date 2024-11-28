@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.saicismart.internal;
 
-import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.API_ENDPOINT_V21;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_FORCE_REFRESH;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_LAST_ACTIVITY;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_SWITCH_AC;
@@ -26,14 +25,22 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+
 import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList;
 import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList.Notification;
+import org.openhab.core.i18n.TimeZoneProvider;
+
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.StringType;
@@ -48,13 +55,8 @@ import org.openhab.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.GsonBuilder;
-
-import net.heberling.ismart.asn1.v1_1.entity.Message;
-import net.heberling.ismart.asn1.v2_1.MessageCoder;
-import net.heberling.ismart.asn1.v2_1.entity.OTA_RVCReq;
-import net.heberling.ismart.asn1.v2_1.entity.OTA_RVCStatus25857;
-import net.heberling.ismart.asn1.v2_1.entity.RvcReqParam;
+import net.heberling.ismart.java.rest.api.v1.MessageNotificationList;
+import net.heberling.ismart.java.rest.api.v1.MessageNotificationList.Notification;
 
 /**
  * The {@link SAICiSMARTHandler} is responsible for handling commands, which are
@@ -97,23 +99,15 @@ public class SAICiSMARTHandler extends BaseThingHandler {
             notifyCarActivity(
                     Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1, ChronoUnit.MINUTES), true);
         } else if (channelUID.getId().equals(CHANNEL_SWITCH_AC) && command == OnOffType.ON) {
-            // reset channel to off
+            // reset channel to ON
             updateState(CHANNEL_SWITCH_AC, OnOffType.ON);
             // enable air conditioning
-            try {
-                sendACCommand((byte) 5, (byte) 8);
-            } catch (URISyntaxException | ExecutionException | TimeoutException | InterruptedException e) {
-                logger.warn("A/C On Command failed", e);
-            }
+            logger.warn("A/C On Command failed. Not impelmented");
         } else if (channelUID.getId().equals(CHANNEL_SWITCH_AC) && command == OnOffType.OFF) {
-            // reset channel to off
+            // reset channel to OFF
             updateState(CHANNEL_SWITCH_AC, OnOffType.OFF);
             // disable air conditioning
-            try {
-                sendACCommand((byte) 0, (byte) 0);
-            } catch (URISyntaxException | ExecutionException | TimeoutException | InterruptedException e) {
-                logger.warn("A/C Off Command failed", e);
-            }
+            logger.warn("A/C Off Command failed. Not impelmented");
         } else if (channelUID.getId().equals(CHANNEL_LAST_ACTIVITY)
                 && command instanceof DateTimeType commnadAsDateTimeType) {
             // update internal activity date from external date
@@ -220,67 +214,6 @@ public class SAICiSMARTHandler extends BaseThingHandler {
         }
     }
 
-    private void sendACCommand(byte command, byte temperature)
-            throws URISyntaxException, ExecutionException, InterruptedException, TimeoutException {
-        MessageCoder<OTA_RVCReq> otaRvcReqMessageCoder = new MessageCoder<>(OTA_RVCReq.class);
-
-        // we send a command end expect the car to wake up
-        notifyCarActivity(Instant.now(), false);
-
-        OTA_RVCReq req = new OTA_RVCReq();
-        req.setRvcReqType(new byte[] { 6 });
-        List<RvcReqParam> params = new ArrayList<>();
-        req.setRvcParams(params);
-        RvcReqParam param = new RvcReqParam();
-        param.setParamId(19);
-        param.setParamValue(new byte[] { command });
-        params.add(param);
-        param = new RvcReqParam();
-        param.setParamId(20);
-        param.setParamValue(new byte[] { temperature });
-        params.add(param);
-        param = new RvcReqParam();
-        param.setParamId(255);
-        param.setParamValue(new byte[] { 0 });
-        params.add(param);
-
-        net.heberling.ismart.asn1.v2_1.Message<OTA_RVCReq> enableACRequest = otaRvcReqMessageCoder.initializeMessage(
-                getBridgeHandler().getUid(), getBridgeHandler().getToken(), config.vin, "510", 25857, 1, req);
-
-        String enableACRequestMessage = otaRvcReqMessageCoder.encodeRequest(enableACRequest);
-
-        String enableACResponseMessage = getBridgeHandler().sendRequest(enableACRequestMessage, API_ENDPOINT_V21);
-
-        net.heberling.ismart.asn1.v2_1.Message<OTA_RVCStatus25857> enableACResponse = new net.heberling.ismart.asn1.v2_1.MessageCoder<>(
-                OTA_RVCStatus25857.class).decodeResponse(enableACResponseMessage);
-
-        // ... use that to request the data again, until we have it
-        while (enableACResponse.getApplicationData() == null) {
-            if (enableACResponse.getBody().isErrorMessagePresent()) {
-                if (enableACResponse.getBody().getResult() == 2) {
-                    getBridgeHandler().relogin();
-                }
-                throw new TimeoutException(new String(enableACResponse.getBody().getErrorMessage()));
-            }
-
-            if (enableACResponse.getBody().getResult() == 0) {
-                // we get an eventId back...
-                enableACRequest.getBody().setEventID(enableACResponse.getBody().getEventID());
-            } else {
-                // try a fresh eventId
-                enableACRequest.getBody().setEventID(0);
-            }
-
-            enableACRequestMessage = otaRvcReqMessageCoder.encodeRequest(enableACRequest);
-
-            enableACResponseMessage = getBridgeHandler().sendRequest(enableACRequestMessage, API_ENDPOINT_V21);
-
-            enableACResponse = new net.heberling.ismart.asn1.v2_1.MessageCoder<>(OTA_RVCStatus25857.class)
-                    .decodeResponse(enableACResponseMessage);
-        }
-
-        logger.trace("Got A/C message: {}", new GsonBuilder().setPrettyPrinting().create().toJson(enableACResponse));
-    }
 
 
     public void notifyCarActivity(Instant timeStamp, boolean force) {
@@ -310,16 +243,18 @@ public class SAICiSMARTHandler extends BaseThingHandler {
         super.updateStatus(status);
     }
 
-    public void handleMessage(Message message) {
-        Instant time = Instant.ofEpochSecond(message.getMessageTime().getSeconds());
 
-        if (time.isAfter(lastAlarmMessage)) {
-            lastAlarmMessage = time;
-            updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_CONTENT,
-                    new StringType(new String(message.getContent(), StandardCharsets.UTF_8)));
-            updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_DATE, new DateTimeType(time));
-        }
+    // public void handleMessage(Message message) {
+    // Instant time = Instant.ofEpochSecond(message.getMessageTime().getSeconds());
+    //
+    // if (time.isAfter(lastAlarmMessage)) {
+    // lastAlarmMessage = time;
+    // updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_CONTENT,
+    // new StringType(new String(message.getContent(), StandardCharsets.UTF_8)));
+    // updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_DATE, new DateTimeType(time));
+    // }
+    //
+    // notifyCarActivity(time, false);
+    // }
 
-        notifyCarActivity(time, false);
-    }
 }

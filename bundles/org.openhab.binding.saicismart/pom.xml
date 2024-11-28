@@ -17,13 +17,16 @@
   <dependencies>
     <dependency>
       <groupId>io.github.saic-ismart-api</groupId>
-      <artifactId>saic-ismart-api</artifactId>
-      <version>0.3.1</version>
-    </dependency>
-    <dependency>
-      <groupId>net.heberling.binarynotes</groupId>
-      <artifactId>binarynotes</artifactId>
-      <version>1.7.0</version>
+      <artifactId>saic-java-rest-api</artifactId>
+      <version>0.4.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>saic-ismart-snapshots</id>
+      <name>SAIC ISMART SNAPSHOTS</name>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+    </repository>
+  </repositories>
 </project>

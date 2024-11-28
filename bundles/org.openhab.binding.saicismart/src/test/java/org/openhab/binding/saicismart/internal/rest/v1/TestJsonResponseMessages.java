@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import net.heberling.ismart.java.rest.api.v1.OauthToken;
+import net.heberling.ismart.java.rest.api.v1.VehicleList;
+
 /**
  * @author Doug Culnane
  */

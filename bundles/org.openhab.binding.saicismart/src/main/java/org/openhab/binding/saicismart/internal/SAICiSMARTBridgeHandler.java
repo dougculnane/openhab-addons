@@ -32,10 +32,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.util.StringContentProvider;
 import org.openhab.binding.saicismart.internal.rest.SaicApiClient;
-import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList;
-import org.openhab.binding.saicismart.internal.rest.v1.OauthToken;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleList;
-import org.openhab.binding.saicismart.internal.rest.v1.VehicleList.VinListItem;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.ThingStatus;
@@ -45,6 +41,11 @@ import org.openhab.core.thing.binding.ThingHandlerService;
 import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.heberling.ismart.java.rest.api.v1.MessageNotificationList;
+import net.heberling.ismart.java.rest.api.v1.OauthToken;
+import net.heberling.ismart.java.rest.api.v1.VehicleList;
+import net.heberling.ismart.java.rest.api.v1.VehicleList.VinListItem;
 
 /**
  * The {@link SAICiSMARTBridgeHandler} is responsible for handling commands, which are
