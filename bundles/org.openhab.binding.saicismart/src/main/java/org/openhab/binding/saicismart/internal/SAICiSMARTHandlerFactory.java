@@ -19,9 +19,7 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
-import org.openhab.core.i18n.LocaleProvider;
 import org.openhab.core.i18n.TranslationProvider;
-
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.Thing;
@@ -46,11 +44,10 @@ public class SAICiSMARTHandlerFactory extends BaseThingHandlerFactory {
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_ACCOUNT, THING_TYPE_VEHICLE);
     private HttpClient httpClient;
-    private LocaleProvider localeProvider;
 
     @Activate
     public SAICiSMARTHandlerFactory(final @Reference TranslationProvider translationProvider,
-            final @Reference LocaleProvider localeProvider, final @Reference HttpClientFactory httpClientFactory) {
+            final @Reference HttpClientFactory httpClientFactory) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
     }
 
@@ -64,7 +61,7 @@ public class SAICiSMARTHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_ACCOUNT.equals(thingTypeUID)) {
-            return new SAICiSMARTBridgeHandler((Bridge) thing, httpClient, localeProvider.getLocale().getLanguage());
+            return new SAICiSMARTBridgeHandler((Bridge) thing, httpClient);
         } else if (THING_TYPE_VEHICLE.equals(thingTypeUID)) {
             return new SAICiSMARTHandler(thing);
         }

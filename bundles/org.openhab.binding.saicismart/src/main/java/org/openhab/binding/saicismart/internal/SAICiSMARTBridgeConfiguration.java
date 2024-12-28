@@ -25,4 +25,5 @@ public class SAICiSMARTBridgeConfiguration {
 
     public String username = "";
     public String password = "";
+    public String language = "en";
 }

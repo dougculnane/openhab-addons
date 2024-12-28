@@ -16,31 +16,15 @@ import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_LAST_ACTIVITY;
 import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_SWITCH_AC;
 
-import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-
-import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList;
-import org.openhab.binding.saicismart.internal.rest.v1.MessageNotificationList.Notification;
-import org.openhab.core.i18n.TimeZoneProvider;
-
 import org.openhab.core.library.types.DateTimeType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.StringType;
@@ -77,7 +61,6 @@ public class SAICiSMARTHandler extends BaseThingHandler {
     private Instant lastAlarmMessage;
     private Instant lastCarActivity;
 
-
     @Nullable
     private Instant lastCarStart;
 
@@ -113,8 +96,8 @@ public class SAICiSMARTHandler extends BaseThingHandler {
             // disable air conditioning
             logger.warn("A/C Off Command failed. Not impelmented");
 
-            notifyCarActivity(Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1,
-                    ChronoUnit.MINUTES), true);
+            notifyCarActivity(
+                    Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1, ChronoUnit.MINUTES), true);
 
         } else if (channelUID.getId().equals(CHANNEL_LAST_ACTIVITY)
                 && command instanceof DateTimeType commnadAsDateTimeType) {
@@ -148,7 +131,8 @@ public class SAICiSMARTHandler extends BaseThingHandler {
         pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, SAICiSMARTBindingConstants.REFRESH_INTERVAL,
                 SAICiSMARTBindingConstants.REFRESH_INTERVAL, TimeUnit.SECONDS);
     }
-    SimpleDateFormat messageTImesampFormmater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+    SimpleDateFormat messageTimesampFormmater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private void updateStatus() {
         try {
@@ -159,15 +143,9 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                 for (Notification notification : messageList.getData().getNotifications()) {
                     if (notification.getVin() != null && notification.getVin().equals(config.vin)) {
                         if (!setLastMessage) {
-<<<<<<< HEAD
 
-                            Date messageTime = messageTImesampFormmater.parse(notification.getMessageTime());
-=======
-                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                            ZonedDateTime mesageDateTime = LocalDateTime.parse(notification.getMessageTime(), formatter)
-                                    .atZone(getTimeZone());
+                            Date messageTime = messageTimesampFormmater.parse(notification.getMessageTime());
 
->>>>>>> bb1af8f32a ([saicismart] Tidy code and pluged in channel.)
                             updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_DATE,
                                     new DateTimeType(messageTime.toInstant()));
                             updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_CONTENT,
@@ -176,15 +154,14 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                         }
                         if (!setLastStart && notification.getMessageType().equals("323")
                                 && notification.getVin().equals(config.vin)) {
-                          
-                            Instant mesageDateTime = messageTImesampFormmater.parse(notification.getMessageTime()).toInstant();
-                            
+
+                            Instant mesageDateTime = messageTimesampFormmater.parse(notification.getMessageTime())
+                                    .toInstant();
+
                             // If the start is new force now to be the activity time..
                             if (lastCarStart != null && lastCarStart.isBefore(mesageDateTime)) {
-                                notifyCarActivity(
-                                        Instant.now().minus(
-                                                SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1, ChronoUnit.MINUTES),
-                                        true);
+                                notifyCarActivity(Instant.now().minus(
+                                        SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS - 1, ChronoUnit.MINUTES), true);
                                 lastCarStart = mesageDateTime;
                             } else {
                                 notifyCarActivity(mesageDateTime, false);
@@ -198,8 +175,8 @@ public class SAICiSMARTHandler extends BaseThingHandler {
                 }
             }
 
-            if (lastCarActivity.isAfter(
-            		Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS, ChronoUnit.MINUTES))) {
+            if (lastCarActivity
+                    .isAfter(Instant.now().minus(SAICiSMARTBindingConstants.POLLING_ACTIVE_MINS, ChronoUnit.MINUTES))) {
                 if (this.getBridgeHandler().getUid() != null && this.getBridgeHandler().getToken() != null) {
                     try {
                         new VehicleStateUpdater(this).call();
@@ -225,8 +202,6 @@ public class SAICiSMARTHandler extends BaseThingHandler {
             logger.error("Update Status Error: {}", e.getMessage(), e);
         }
     }
-
-
 
     public void notifyCarActivity(Instant timeStamp, boolean force) {
         // if the car activity changed, notify the channel
@@ -255,7 +230,6 @@ public class SAICiSMARTHandler extends BaseThingHandler {
         super.updateStatus(status);
     }
 
-
     // public void handleMessage(Message message) {
     // Instant time = Instant.ofEpochSecond(message.getMessageTime().getSeconds());
     //
@@ -268,6 +242,4 @@ public class SAICiSMARTHandler extends BaseThingHandler {
     //
     // notifyCarActivity(time, false);
     // }
-
-
 }

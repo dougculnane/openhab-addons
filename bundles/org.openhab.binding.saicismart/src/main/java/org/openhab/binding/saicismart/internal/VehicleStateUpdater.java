@@ -12,7 +12,12 @@
  */
 package org.openhab.binding.saicismart.internal;
 
-import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.*;
+import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_CHARGING;
+import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_LAST_CHARGE_STATE_UPDATE;
+import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_ODOMETER;
+import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_PLUGGED_IN;
+import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_RANGE_ELECTRIC;
+import static org.openhab.binding.saicismart.internal.SAICiSMARTBindingConstants.CHANNEL_SOC;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -83,7 +88,6 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
             ChrgMgmtData chrgMgmtDat = mgmtDataResonse.getData().getChrgMgmtData();
             if (chrgMgmtDat != null) {
 
-
                 chrgingState = chrgMgmtDat.getBmsChrgSts();
 
                 // saiCiSMARTHandler.updateState(CHANNEL_ENGINE, OnOffType.from(engineRunning));
@@ -92,7 +96,6 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
                 // saiCiSMARTHandler.updateState(CHANNEL_AUXILIARY_BATTERY_VOLTAGE, new QuantityType<>(
                 // mgmtDataResonse.getData().getRvsChargeStatus().getWorkingVoltage() / 100.d, Units.VOLT));
 
-
                 // Sometimes we get a value of 1023 which we should ignore.
                 Integer socDsp = chrgMgmtDat.getBmsPackSOCDsp();
                 if (socDsp != null && socDsp != 1023) {
@@ -100,7 +103,6 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
                     saiCiSMARTHandler.updateState(CHANNEL_LAST_CHARGE_STATE_UPDATE, new DateTimeType(Instant.now()));
                 }
             }
-
 
             RvsChargeStatus rvsChargeStatus = mgmtDataResonse.getData().getRvsChargeStatus();
             if (rvsChargeStatus != null) {
@@ -121,9 +123,7 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
                 saiCiSMARTHandler.updateState(CHANNEL_PLUGGED_IN, OnOffType.from(pluggedIn));
             }
 
-
-
-        if (chrgingState != null) { // TODO || acActive || engineRunning) {
+            // if (chrgingState != null) { // TODO || acActive || engineRunning) {
             // update activity date
             saiCiSMARTHandler.notifyCarActivity(Instant.now(), true);
             // Double power = (chargingStatusResponseMessage.getApplicationData().getBmsPackCrnt() * 0.05d - 1000.0d)
@@ -144,7 +144,7 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
             // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_TYRE_PRESSURE_FRONT_RIGHT, new
             // QuantityType<>(
             // chargingStatusResponseMessage.getApplicationData().getBasicVehicleStatus().getFrontRrightTyrePressure()
-            // * 4 / 100.d,
+            // * 4 / 100.d,CHANNEL_SWITCH_AC
             // Units.BAR));
             // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_TYRE_PRESSURE_REAR_LEFT, new
             // QuantityType<>(
@@ -213,7 +213,6 @@ class VehicleStateUpdater implements Callable<VehicleStatus> {
             // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_SWITCH_AC, OnOffType.from(acActive));
             // saiCiSMARTHandler.updateState(SAICiSMARTBindingConstants.CHANNEL_REMOTE_AC_STATUS, new DecimalType(
             // chargingStatusResponseMessage.getApplicationData().getBasicVehicleStatus().getRemoteClimateStatus()));
-
 
             // boolean engineRunning = mgmtDataResonse.getData().getRvsChargeStatus().getEngineStatus() == 1;
 

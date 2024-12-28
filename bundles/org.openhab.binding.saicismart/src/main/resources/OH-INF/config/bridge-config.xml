@@ -14,5 +14,15 @@
 			<description>iSMART Password</description>
 			<context>password</context>
 		</parameter>
+		<parameter name="language" type="text" required="true">
+			<label>Language</label>
+			<description>iSMART language</description>
+			<default>en</default>
+			<options>
+				<option value="de">de</option>
+				<option value="en">en</option>
+			</options>
+			<context>language</context>
+		</parameter>
 	</config-description>
 </config-description:config-descriptions>
