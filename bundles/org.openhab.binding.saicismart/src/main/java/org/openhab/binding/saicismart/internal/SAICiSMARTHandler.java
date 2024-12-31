@@ -229,17 +229,4 @@ public class SAICiSMARTHandler extends BaseThingHandler {
     public void updateStatus(ThingStatus status) {
         super.updateStatus(status);
     }
-
-    // public void handleMessage(Message message) {
-    // Instant time = Instant.ofEpochSecond(message.getMessageTime().getSeconds());
-    //
-    // if (time.isAfter(lastAlarmMessage)) {
-    // lastAlarmMessage = time;
-    // updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_CONTENT,
-    // new StringType(new String(message.getContent(), StandardCharsets.UTF_8)));
-    // updateState(SAICiSMARTBindingConstants.CHANNEL_ALARM_MESSAGE_DATE, new DateTimeType(time));
-    // }
-    //
-    // notifyCarActivity(time, false);
-    // }
 }

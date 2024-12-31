@@ -44,6 +44,7 @@ Once an account has been configured it can be scanned for vehicles.
 | soc                        | Number                   | R          | State of the battery in %                           | no       |
 | power                      | Number:Power             | R          | Power usage                                         | no       |
 | charging                   | Switch                   | R          | Charging                                            | no       |
+| plugged-in                 | Switch                   | R          | Plugged In                                          | no       |
 | engine                     | Switch                   | R          | Engine state                                        | no       |
 | speed                      | Number:Speed             | R          | Vehicle speed                                       | no       |
 | location                   | Location                 | R          | The actual position of the vehicle                  | no       |
@@ -90,6 +91,7 @@ Number 		MG5_Total_Distance_Driven		"MG5 Total Distance Driven"	["Length"]		{cha
 Number 		MG5_Electric_Range			"MG5 Electric Range"		["Length"]		{channel="saicismart:vehicle:myaccount:mymg5:range-electric"}
 Number		MG5_Battery_Level			"MG5 Battery Level"		["Energy"]		{channel="saicismart:vehicle:myaccount:mymg5:soc"}
 Number 		MG5_Power_Usage 			"MG5 Power Usage"		["Power"]		{channel="saicismart:vehicle:myaccount:mymg5:power"}
+Switch 		MG5_Plugged_In 			"MG5 Plugged In"						{channel="saicismart:vehicle:myaccount:mymg5:plugged-in"}
 Switch 		MG5_Charging 				"MG5 Charging"						{channel="saicismart:vehicle:myaccount:mymg5:charging"}
 Switch 		MG5_Engine_State			"MG5 Engine State"					{channel="saicismart:vehicle:myaccount:mymg5:engine"}
 Number 		MG5_Speed				"MG5 Speed"			["Speed"]		{channel="saicismart:vehicle:myaccount:mymg5:speed"}
@@ -124,6 +126,8 @@ String 		MG5_Vehicle_Message			"MG5 Vehicle Message"					{channel="saicismart:ve
 ## Limitations
 
 The SAIC API has changed and so some channels that were available are no longer available.
+
+Only one iSMART account can connect to the vehicle at one time. It is there for advisable to create a "Secondary Account" in the iSMART mobile application for use by openHAB.
 
 The advanced channel "force refresh" if used regularly will drain the 12v car battery and you will be unable to start it!
 
