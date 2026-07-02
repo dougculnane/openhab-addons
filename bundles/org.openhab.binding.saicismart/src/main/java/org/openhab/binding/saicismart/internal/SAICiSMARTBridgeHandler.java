@@ -1,0 +1,211 @@
+/**
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ */
+package org.openhab.binding.saicismart.internal;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+import javax.xml.bind.DatatypeConverter;
+
+import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.util.StringContentProvider;
+import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.ThingStatus;
+import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.binding.BaseBridgeHandler;
+import org.openhab.core.thing.binding.ThingHandlerService;
+import org.openhab.core.types.Command;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import net.heberling.ismart.java.rest.SaicApiClient;
+import net.heberling.ismart.java.rest.api.v1.MessageNotificationList;
+import net.heberling.ismart.java.rest.api.v1.OauthToken;
+import net.heberling.ismart.java.rest.api.v1.VehicleList;
+import net.heberling.ismart.java.rest.api.v1.VehicleList.VinListItem;
+
+/**
+ * The {@link SAICiSMARTBridgeHandler} is responsible for handling commands, which are
+ * sent to one of the channels.
+ *
+ * @author Markus Heberling - Initial contribution
+ * @author Doug Culnane - SAIC REST API
+ */
+@NonNullByDefault
+public class SAICiSMARTBridgeHandler extends BaseBridgeHandler {
+
+    private final Logger logger = LoggerFactory.getLogger(SAICiSMARTBridgeHandler.class);
+
+    private @Nullable SAICiSMARTBridgeConfiguration config;
+
+    private @Nullable Instant tokenExpires;
+    private @Nullable String token;
+    private @Nullable String uid;
+    private @Nullable MessageNotificationList messageList;
+
+    private VinListItem[] vinList;
+    private HttpClient httpClient;
+    private SaicApiClient saicApiClient;
+
+    private @Nullable Future<?> pollingJob;
+
+    public SAICiSMARTBridgeHandler(Bridge bridge, HttpClient httpClient) {
+        super(bridge);
+        this.httpClient = httpClient;
+        this.saicApiClient = new SaicApiClient(httpClient);
+        this.vinList = new VinListItem[0];
+    }
+
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
+        // no commands available
+    }
+
+    @Override
+    public void initialize() {
+        config = getConfigAs(SAICiSMARTBridgeConfiguration.class);
+        updateStatus(ThingStatus.UNKNOWN);
+
+        // Validate configuration
+        if (this.config.username.isBlank()) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "@text/thing-type.config.saicismart.bridge.username.required");
+            return;
+        }
+        if (this.config.password.isBlank()) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "@text/thing-type.config.saicismart.bridge.password.required");
+            return;
+        }
+        if (this.config.username.length() > 50) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "@text/thing-type.config.saicismart.bridge.username.toolong");
+            return;
+        }
+        pollingJob = scheduler.scheduleWithFixedDelay(this::updateStatus, 0,
+                SAICiSMARTBindingConstants.REFRESH_INTERVAL, TimeUnit.MINUTES);
+    }
+
+    private void updateStatus() {
+        if (uid == null || token == null || (tokenExpires != null && tokenExpires.isBefore(Instant.now()))) {
+            login();
+        }
+        updateMessages();
+    }
+
+    private void login() {
+        try {
+            // login
+            OauthToken loginResponse = saicApiClient.getOauthToken(config.username, config.password, config.language);
+            if (loginResponse.isSuccess()) {
+                this.uid = loginResponse.getData().getUser_id();
+                this.token = loginResponse.getData().getAccess_token();
+                if (loginResponse.getExpires_in() != null) {
+                    tokenExpires = Instant.now();
+                    tokenExpires.plus(Duration.ofSeconds(loginResponse.getExpires_in()));
+                }
+            }
+
+            // get vehicles
+            VehicleList vehiclesResponse = saicApiClient.getVehicleList(token);
+            if (vehiclesResponse.isSuccess() && vehiclesResponse.getData() != null
+                    && vehiclesResponse.getData().getVinList() != null) {
+                this.vinList = vehiclesResponse.getData().getVinList();
+            }
+            updateStatus(ThingStatus.ONLINE);
+        } catch (Exception e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+        }
+    }
+
+    private void updateMessages() {
+        try {
+            this.messageList = saicApiClient.getMessageNotificationList(getToken());
+            updateStatus(ThingStatus.ONLINE);
+        } catch (TimeoutException | InterruptedException | ExecutionException | IOException e) {
+            logger.warn("Update messages error: {}", e.getMessage());
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+            relogin();
+        }
+    }
+
+    public String hashMD5(String password) throws NoSuchAlgorithmException {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        md.update(password.getBytes());
+        byte[] digest = md.digest();
+        return DatatypeConverter.printHexBinary(digest).toUpperCase();
+    }
+
+    @Override
+    public Collection<Class<? extends ThingHandlerService>> getServices() {
+        return Collections.singleton(VehicleDiscovery.class);
+    }
+
+    @Nullable
+    public String getUid() {
+        return uid;
+    }
+
+    @Nullable
+    public String getToken() {
+        return token;
+    }
+
+    public VinListItem[] getVinList() {
+        return this.vinList;
+    }
+
+    public String sendRequest(String request, String endpoint)
+            throws URISyntaxException, ExecutionException, InterruptedException, TimeoutException {
+        return httpClient.POST(new URI(endpoint)).content(new StringContentProvider(request), "text/html").send()
+                .getContentAsString();
+    }
+
+    public void relogin() {
+        uid = null;
+        token = null;
+        login();
+    }
+
+    @Override
+    public void dispose() {
+        Future<?> job = pollingJob;
+        if (job != null) {
+            job.cancel(true);
+            pollingJob = null;
+        }
+    }
+
+    public SaicApiClient getSaicApiClient() {
+        return saicApiClient;
+    }
+
+    @Nullable
+    public MessageNotificationList getMessages() {
+        return messageList;
+    }
+}
